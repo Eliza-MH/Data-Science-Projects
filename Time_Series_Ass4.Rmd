@@ -1,0 +1,321 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+#install packages
+#install.packages ("tidyverse")
+#install.packages("TTR")
+```
+
+
+```{r}
+#load libraries
+library(tidyverse)
+library(TTR)
+```
+
+
+```{r}
+#set working directory (adjust this for your own computer)
+setwd("C:/Users/muhir/Downloads/Data Science for Businesses")
+```
+
+
+```{r}
+#read dataset into R
+airdf <- read.csv("airfare.csv")
+View(airdf)
+```
+
+
+```{r}
+#create a time series plot of average airfare data
+ggplot(data = airdf, mapping = aes(x = Year, y = Airfare)) +
+  geom_line () +
+  geom_point() +
+  #scale_x_continuous(breaks = seq(0, 13, by = 1)) +
+  labs(title = "Average Quartly Airfare Calculated from BTS", x = "Year", y = "Airfare")
+```
+
+
+```{r}
+#create a separate vector for the actual average airfares
+airfare_actuals <- airdf$Airfare
+```
+
+
+```{r}
+#Create functions for the accuracy measures with vector of actual values 
+#and vector of predicted values as inputs
+mae<-function(actual,pred){
+  mae <- mean(abs(actual-pred), na.rm=TRUE)
+  return (mae)
+}
+
+mse<-function(actual,pred){
+  mse <- mean((actual-pred)^2, na.rm=TRUE)
+  return (mse)
+}
+
+rmse<-function(actual,pred){
+  rmse <- sqrt(mean((actual-pred)^2, na.rm=TRUE))
+  return (rmse)
+}  
+
+mape<-function(actual,pred){
+  mape <- mean(abs((actual - pred)/actual), na.rm=TRUE)*100
+  return (mape)
+}
+```
+
+
+```{r}
+#use the simple moving average method to forecast average airfare in 2019
+
+sma_air <- SMA(airfare_actuals, n=3)
+sma_air
+```
+
+```{r}
+#The last value in the vector is the forecast for average airfare in 2019
+
+#Adjust the vector of predicted values to align with the airfare_actual vector
+airfare_ma_pred<-c(NA, sma_air[-length(sma_air)]) 
+airfare_ma_pred
+```
+
+```{r}
+#Calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mae(airfare_actuals, airfare_ma_pred)
+mse(airfare_actuals, airfare_ma_pred)
+rmse(airfare_actuals, airfare_ma_pred)
+mape(airfare_actuals, airfare_ma_pred)
+```
+
+```{r}
+#use the exponential smoothing method with alpha = 0.2 to forecast the 
+# average airfare for 2019
+air_exp <- EMA(airfare_actuals,n=1, ratio = .2)
+air_exp
+
+#The last value in the vector is the forecast for the average airfare in 2019
+```
+
+```{r}
+#Adjust the vector of predicted values to align with the airfare_actual vector
+air_exp_pred <- c(NA, air_exp[-length(air_exp)])
+air_exp_pred
+```
+
+
+```{r}
+#Calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mape(airfare_actuals, air_exp_pred)
+mae(airfare_actuals, air_exp_pred)
+mse(airfare_actuals, air_exp_pred)
+rmse(airfare_actuals, air_exp_pred)
+```
+
+```{r}
+#use the exponential smoothing method with alpha = 0.8 to forecast the 
+# average airfare for 2019
+air_exp8 <- EMA(airfare_actuals,n=1, ratio = .8)
+air_exp8
+
+#The last value in the vector is the forecast for the average airfare in 2019
+```
+
+```{r}
+#Adjust the vector of predicted values to align with the airfare_actual vector
+air_exp_pred8 <- c(NA, air_exp8[-length(air_exp8)])
+air_exp_pred8
+```
+
+```{r}
+#Calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mape(airfare_actuals, air_exp_pred8)
+mae(airfare_actuals, air_exp_pred8)
+mse(airfare_actuals, air_exp_pred8)
+rmse(airfare_actuals, air_exp_pred8)
+```
+Part 2 
+```{r}
+#read dataset into R
+warnerdf <- read.csv("warner_music.csv")
+View(warnerdf)
+```
+
+
+```{r}
+#create a time series plot showing warner_Music Group quarterly revenue
+ggplot(data = warnerdf, mapping = aes(x = Quarter, y = Revenue)) +
+  geom_line (group=1) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90))
+  labs(title = "Warner Music Group Quartly revenue in Millions of U.S. Dollars, 
+       2015 to 2021", x = "Quarter", y = "Revenue")
+```
+
+```{r}
+#Add a column of consecutive numbers corresponding with each quarter
+warnerdf$Time <- 1:nrow(warnerdf)
+
+```
+
+
+```{r}
+#Create dummy variables corresponding to each quarter 
+warnerdf$Q1 <- ifelse(grepl("Q1",warnerdf$Quarter), 1, 0)
+warnerdf$Q2 <- ifelse(grepl("Q2",warnerdf$Quarter), 1, 0)
+warnerdf$Q3 <- ifelse(grepl("Q3",warnerdf$Quarter), 1, 0)
+warnerdf$Q4 <- ifelse(grepl("Q4",warnerdf$Quarter), 1, 0)
+```
+
+
+```{r}
+#Use regression with the time variable to generate a regression 
+#equation for forecasting
+warner_reg<-lm(Revenue ~ Time, data = warnerdf)
+summary(warner_reg)
+```
+
+
+```{r}
+#Create a vector of predicted values generated from the 
+#regression above
+warner_reg_pred = predict(warner_reg)
+```
+
+
+```{r}
+#calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mae(warnerdf$Revenue, warner_reg_pred)
+mse(warnerdf$Revenue, warner_reg_pred)
+rmse(warnerdf$Revenue, warner_reg_pred)
+mape(warnerdf$Revenue, warner_reg_pred)
+```
+
+```{r}
+#Use multiple regression with the time and quarters variables to generate 
+#a regression equation for forecasting
+warner_reg2<-lm(Revenue ~ Time + Q2 + Q3 + Q4, data = warnerdf)
+summary(warner_reg2)
+```
+
+
+```{r}
+#Create a vector of predicted values generated from the multiple 
+#regression above
+warner_reg_pred2 = predict(warner_reg2)
+```
+
+
+```{r}
+#calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mae(warnerdf$Revenue, warner_reg_pred2)
+mse(warnerdf$Revenue, warner_reg_pred2)
+rmse(warnerdf$Revenue, warner_reg_pred2)
+mape(warnerdf$Revenue, warner_reg_pred2)
+```
+```{r}
+#Predict Warner Music Group Revenue for 2022 Q1, Q2, Q3, Q4
+
+#Create an object with the time periods to use for the prediction
+new <- data.frame(Time = c(26, 27, 28, 29), Q2 = c(0,1,0,0), Q3 = c(0,0,1,0), 
+                  Q4 = c(0,0,0,1)) 
+predict(warner_reg2, newdata = new)
+```
+Part3
+
+
+```{r}
+#read dataset into R
+amazondf <- read.csv("amazon_web_services.csv")
+View(amazondf)
+
+```
+
+```{r}
+#create a time series plot showing Amazon Web Services quarterly revenue
+ggplot(data = amazondf, mapping = aes(x = Quarter, y = Revenue)) +
+  geom_line (group=1) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90))
+  labs(title = "Amazon Web Services revenue in Millions of U.S. Dollars, 
+       2014 to 2021", x = "Quarter", y = "Revenue")
+```
+
+```{r}
+#Add a column of consecutive numbers corresponding with each quarter
+amazondf$Time <- 1:nrow(amazondf) 
+```
+
+
+```{r}
+#Use simple linear regression analysis to create a regression equation for 
+#forecasting
+amazonreg <- lm(Revenue ~ Time, data = amazondf)
+summary(amazonreg)
+```
+```{r}
+#Create a vector of predicted values generated from the 
+#regression above
+amazon_pred = predict(amazonreg)
+```
+
+
+```{r}
+#calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mae (amazondf$Revenue, amazon_pred)
+mse (amazondf$Revenue, amazon_pred)
+rmse (amazondf$Revenue, amazon_pred)
+mape (amazondf$Revenue, amazon_pred)
+
+```
+
+```{r}
+#Create a new variable that squares the Time variable
+amazondf$Time2 <- amazondf$Time^2
+```
+
+
+```{r}
+#Use a quadratic regression model to create a regression equation for 
+#forecasting
+amazonregquad<-lm(Revenue ~ Time + Time2, data = amazondf)
+summary(amazonregquad)
+```
+
+```{r}
+#Create a vector of predicted values generated from the 
+#regression above
+amazon_pred2 = predict(amazonregquad)
+```
+
+```{r}
+#calculate accuracy measures with vector of actual values and vector
+#of predicted values as inputs
+mae (amazondf$Revenue, amazon_pred2)
+mse (amazondf$Revenue, amazon_pred2)
+rmse (amazondf$Revenue, amazon_pred2)
+mape (amazondf$Revenue, amazon_pred2)
+```
+
+```{r}
+#Forecast Q1, Q2, Q3, and Q4 revenues for Amazon Web Services for 2022 using the results of the second regression analysis
+
+#Create an object with the time periods to use for the prediction
+new3 <- data.frame(Time = c(33, 34, 35, 36), Time2 = c(1089, 1156, 1225, 1296))
+predict(amazonregquad, newdata = new3)
+
+```
+
