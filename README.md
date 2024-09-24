@@ -10,3 +10,7 @@ For the time series analyses, I assume working for a large airline (in 2018) and
 ## Logistic regression file, I conducted a logistic regression analysis in R. 
 I am using a dataset of information from 7,232 car insurance customers, some of whom have made insurance claims and some who haven’t. I also used a second dataset of new customers to predict the probability of new customers making insurance claims. 
 For this analysis, I assume working at an auto insurance company and would like to predict the probability of insurance claims based on different customer characteristics. My business question is: “What is the probability that a customer will make an auto insurance claim based on certain characteristics?” 
+## Data Analysis Example Practices - Prefomed Data manipulation Using Python Libraries (NumPy & Pandas)
+- I used the Movielens 1M Dataset and
+- US Baby Names 1880 - 2010 Dataset
+
